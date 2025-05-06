@@ -26,11 +26,12 @@ Imports:
 Depends:
     R (>= 3.5.0)
 Suggests: 
-    mapsf, 
-    tinytest, 
-    covr, 
-    terra
+    mapsf,
+    tinytest,
+    covr,
+    terra,
+    processx
 URL: https://github.com/riatelab/osrm
 BugReports: https://github.com/riatelab/osrm/issues
 Encoding: UTF-8
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
