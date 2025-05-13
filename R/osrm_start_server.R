@@ -62,12 +62,10 @@ osrm_start_server <- function(
   if (!file.exists(osrm_path)) {
     stop("File does not exist: ", osrm_path, call. = FALSE)
   }
-  # Determine file extension
   ext <- tolower(sub(".*\\.osrm\\.(.+)$", "\\1", osrm_path))
   if (!ext %in% c("mldgr", "hsgr")) {
     stop("'osrm_path' must end in .osrm.mldgr or .osrm.hsgr", call. = FALSE)
   }
-  # Auto-select or validate algorithm
   if (is.null(algorithm)) {
     algorithm <- if (ext == "mldgr") "MLD" else "CH"
   } else {
@@ -85,68 +83,105 @@ osrm_start_server <- function(
       )
     }
   }
-
-  # Build server arguments
   prefix <- sub(
     "\\.osrm\\.(?:mldgr|hsgr)$",
     "\\.osrm",
     osrm_path,
     ignore.case = TRUE
   )
+
+  # --- build arguments, omitting defaults (but always passing port) ---
   arguments <- character()
+
+  # standalone flags
   if (version) arguments <- c(arguments, "-v")
   if (help) arguments <- c(arguments, "-h")
+
+  # verbosity only if not default
   verbosity <- match.arg(verbosity)
-  arguments <- c(arguments, "-l", verbosity)
+  if (verbosity != "INFO") {
+    arguments <- c(arguments, "-l", verbosity)
+  }
+
+  # trial only if requested
   if (!identical(trial, FALSE)) {
     val <- if (is.logical(trial) && trial) 1L else as.integer(trial)
     arguments <- c(arguments, "--trial", as.character(val))
   }
-  arguments <- c(
-    arguments,
-    "-i",
-    ip,
-    "-p",
-    as.character(port),
-    "-t",
-    as.character(threads)
-  )
+
+  # ip only if not default
+  if (ip != "0.0.0.0") {
+    arguments <- c(arguments, "-i", ip)
+  }
+
+  # **always** pass port
+  arguments <- c(arguments, "-p", as.character(port))
+
+  # threads only if not default
+  if (threads != 8L) {
+    arguments <- c(arguments, "-t", as.character(threads))
+  }
+
+  # other flags
   if (shared_memory) arguments <- c(arguments, "--shared-memory")
   if (!is.null(memory_file))
     arguments <- c(arguments, "--memory_file", memory_file)
   if (mmap) arguments <- c(arguments, "-m")
   if (!is.null(dataset_name))
     arguments <- c(arguments, "--dataset-name", dataset_name)
+
+  # always pass algorithm
   arguments <- c(arguments, "-a", algorithm)
-  arguments <- c(
-    arguments,
-    "--max-viaroute-size",
-    as.character(max_viaroute_size),
-    "--max-trip-size",
-    as.character(max_trip_size),
-    "--max-table-size",
-    as.character(max_table_size),
-    "--max-matching-size",
-    as.character(max_matching_size),
-    "--max-nearest-size",
-    as.character(max_nearest_size),
-    "--max-alternatives",
-    as.character(max_alternatives),
-    "--max-matching-radius",
-    as.character(max_matching_radius)
-  )
+
+  # size-limits only if different from defaults
+  if (max_viaroute_size != 500L)
+    arguments <- c(
+      arguments,
+      "--max-viaroute-size",
+      as.character(max_viaroute_size)
+    )
+  if (max_trip_size != 100L)
+    arguments <- c(arguments, "--max-trip-size", as.character(max_trip_size))
+  if (max_table_size != 100L)
+    arguments <- c(arguments, "--max-table-size", as.character(max_table_size))
+  if (max_matching_size != 100L)
+    arguments <- c(
+      arguments,
+      "--max-matching-size",
+      as.character(max_matching_size)
+    )
+  if (max_nearest_size != 100L)
+    arguments <- c(
+      arguments,
+      "--max-nearest-size",
+      as.character(max_nearest_size)
+    )
+  if (max_alternatives != 3L)
+    arguments <- c(
+      arguments,
+      "--max-alternatives",
+      as.character(max_alternatives)
+    )
+  if (max_matching_radius != -1L)
+    arguments <- c(
+      arguments,
+      "--max-matching-radius",
+      as.character(max_matching_radius)
+    )
+
+  # finally, add the graph prefix
   arguments <- c(arguments, prefix)
 
+  # echo & launch
   if (isTRUE(echo_cmd)) {
-    message("osrm-routed ", paste(shQuote(c(arguments)), collapse = " "))
+    message("osrm-routed ", paste(shQuote(arguments), collapse = " "))
   }
-
-  proc <- processx::process$new(
+  osrm_server <- processx::process$new(
     "osrm-routed",
     args = arguments,
     echo_cmd = echo_cmd,
     stderr = "|",
     stdout = "|"
   )
-  invisible(proc)
+  invisible(osrm_server)
 }
