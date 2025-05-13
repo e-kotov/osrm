@@ -87,7 +87,12 @@ osrm_start_server <- function(
   }
 
   # Build server arguments
-  prefix <- sub("\\.osrm\\.(?:mldgr|hsgr)$", "", osrm_path, ignore.case = TRUE)
+  prefix <- sub(
+    "\\.osrm\\.(?:mldgr|hsgr)$",
+    "\\.osrm",
+    osrm_path,
+    ignore.case = TRUE
+  )
   arguments <- character()
   if (version) arguments <- c(arguments, "-v")
   if (help) arguments <- c(arguments, "-h")
