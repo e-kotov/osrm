@@ -179,9 +179,7 @@ osrm_start_server <- function(
   osrm_server <- processx::process$new(
     "osrm-routed",
     args = arguments,
-    echo_cmd = echo_cmd,
-    stderr = "|",
-    stdout = "|"
+    echo_cmd = echo_cmd
   )
   invisible(osrm_server)
 }
