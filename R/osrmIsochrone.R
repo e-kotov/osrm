@@ -21,8 +21,6 @@
 #' @param smooth if TRUE a moving window with a gaussian blur is applied to 
 #' durations. This option may be usefull to remove small patches of hard to 
 #' reach areas. The computed isochrones are less precise but better looking. 
-#' @param k size (sigma) of the gaussian moving window. A reasonable value is 
-#' used by default.
 #' @param osrm.server the base URL of the routing server.
 #' getOption("osrm.server") by default.
 #' @param osrm.profile the routing profile to use, e.g. "car", "bike" or "foot"
@@ -68,7 +66,7 @@
 #' }
 #' }
 osrmIsochrone <- function(loc, breaks = seq(from = 0, to = 60, length.out = 7),
-                          exclude, res = 30, smooth = FALSE, k,
+                          exclude, res = 30, smooth = FALSE,
                           osrm.server = getOption("osrm.server"),
                           osrm.profile = getOption("osrm.profile")) {
   opt <- options(error = NULL)
@@ -188,30 +186,10 @@ osrmIsochrone <- function(loc, breaks = seq(from = 0, to = 60, length.out = 7),
     }
     r <- terra::rast(sgrid[, c("COORDX", "COORDY", "measure"), drop = TRUE], 
               crs = "epsg:3857")
-    if (missing(k)) {
-      k <- terra::res(r)[1] / 2
-    }
-    mat <- terra::focalMat(x = r, d = k, type = "Gauss")
-    
-    # test for invalid focal matrix
-    if (sum(dim(mat)) < 6){
-      warning(
-        paste0(
-          "An empty object is returned. ",
-          "Select a larger value for 'k'."
-        ),
-        call. = FALSE
-      )
-      empty_res <- st_sf(
-        crs = ifelse(is.na(oprj), 4326, oprj),
-        id = integer(),
-        isomin = numeric(),
-        isomax = numeric(),
-        geometry = st_sfc()
-      )
-      return(empty_res)
-    }
-    sgrid <- terra::focal(x = r, w = mat, fun = mean, na.rm = TRUE)
+    k <- terra::res(r)[1] / 2
+    rr <- terra::disagg(x = r, fact = 4, method  =  "near")
+    mat <- terra::focalMat(x = rr, d = k, type = "Gauss")
+    sgrid <- terra::focal(x = rr, w = mat, fun = mean, na.rm = TRUE)
     sgrid[is.na(sgrid)] <- tmax + 1
   }
   

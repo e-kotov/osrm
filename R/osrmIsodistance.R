@@ -21,8 +21,6 @@
 #' @param smooth if TRUE a moving window with a gaussian blur is applied to 
 #' distances. This option may be usefull to remove small patches of hard to 
 #' reach areas. The computed isodistances are less precise but better looking. 
-#' @param k size (sigma) of the gaussian moving window. A reasonable value is 
-#' used by default.
 #' @param osrm.server the base URL of the routing server.
 #' getOption("osrm.server") by default.
 #' @param osrm.profile the routing profile to use, e.g. "car", "bike" or "foot"
@@ -66,24 +64,24 @@
 #' }
 #' }
 osrmIsodistance <- function(loc, breaks = seq(from = 0, to = 10000, length.out = 4),
-                            exclude, res = 30, smooth = FALSE, k,
+                            exclude, res = 30, smooth = FALSE,
                             osrm.server = getOption("osrm.server"),
                             osrm.profile = getOption("osrm.profile")) {
   opt <- options(error = NULL)
   on.exit(options(opt), add = TRUE)
-
+  
   # input management
   loc <- input_route(x = loc, id = "loc", single = TRUE)
   oprj <- loc$oprj
   loc <- st_as_sf(data.frame(lon = loc$lon, lat = loc$lat),
-    coords = c("lon", "lat"), crs = 4326
+                  coords = c("lon", "lat"), crs = 4326
   )
   loc <- st_transform(loc, "epsg:3857")
-
+  
   # max distance management to see how far to extend the grid to get measures
   breaks <- unique(sort(breaks))
   tmax <- max(breaks)
-
+  
   # gentle sleeptime & param for demo server
   if (osrm.server != "https://routing.openstreetmap.de/") {
     sleeptime <- 0
@@ -92,10 +90,10 @@ osrmIsodistance <- function(loc, breaks = seq(from = 0, to = 10000, length.out =
     sleeptime <- 1
     deco <- 75
   }
-
+  
   # create a grid to obtain measures
   sgrid <- rgrid(loc = loc, dmax = tmax * 1.5, res = res)
-
+  
   # slice the grid to make several API calls
   lsgr <- nrow(sgrid)
   niter <- lsgr %/% deco
@@ -129,10 +127,10 @@ osrmIsodistance <- function(loc, breaks = seq(from = 0, to = 10000, length.out =
     listDur[[ltot]] <- dmat$distances
     listDest[[ltot]] <- dmat$destinations
   }
-
+  
   measure <- do.call(c, listDur)
   destinations <- do.call(rbind, listDest)
-
+  
   # assign values to the grid
   sgrid <- fill_grid(
     destinations = destinations, measure = measure,
@@ -164,7 +162,7 @@ osrmIsodistance <- function(loc, breaks = seq(from = 0, to = 10000, length.out =
     sgrid[is.nan(sgrid$measure), "measure"] <- tmax + 1
     sgrid[is.infinite(sgrid$measure), "measure"] <- tmax + 1
     sgrid[sgrid$measure > tmax, "measure"] <- tmax + 1
-  } else {
+  } else {    
     if (!requireNamespace("terra", quietly = TRUE)) {
       stop(paste0(
         "'terra' package is needed for this function to work.",
@@ -173,30 +171,10 @@ osrmIsodistance <- function(loc, breaks = seq(from = 0, to = 10000, length.out =
     }
     r <- terra::rast(sgrid[, c("COORDX", "COORDY", "measure"), drop = TRUE], 
                      crs = "epsg:3857")
-    if (missing(k)) {
-      k <- terra::res(r)[1] / 2
-    }
-    mat <- terra::focalMat(x = r, d = k, type = "Gauss")
-    
-    # test for invalid focal matrix
-    if (sum(dim(mat)) < 6){
-      warning(
-        paste0(
-          "An empty object is returned. ",
-          "Select a larger value for 'k'."
-        ),
-        call. = FALSE
-      )
-      empty_res <- st_sf(
-        crs = ifelse(is.na(oprj), 4326, oprj),
-        id = integer(),
-        isomin = numeric(),
-        isomax = numeric(),
-        geometry = st_sfc()
-      )
-      return(empty_res)
-    }
-    sgrid <- terra::focal(x = r, w = mat, fun = mean, na.rm = TRUE)
+    k <- terra::res(r)[1] / 2
+    rr <- terra::disagg(x = r, fact = 4, method  =  "near")
+    mat <- terra::focalMat(x = rr, d = k, type = "Gauss")
+    sgrid <- terra::focal(x = rr, w = mat, fun = mean, na.rm = TRUE)
     sgrid[is.na(sgrid)] <- tmax + 1
   }
   
@@ -206,13 +184,13 @@ osrmIsodistance <- function(loc, breaks = seq(from = 0, to = 10000, length.out =
   iso <- iso[-nrow(iso), ]
   # fisrt line always start at 0
   iso[1, "isomin"] <- 0
-
+  
   # proj mgmnt
   if (!is.na(oprj)) {
     iso <- st_transform(x = iso, oprj)
   } else {
     iso <- st_transform(x = iso, 4326)
   }
-
+  
   return(iso)
 }

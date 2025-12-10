@@ -17,6 +17,13 @@ if(demo_server){
   expect_identical(colnames(r), 
                    c("id", "isomin", "isomax", "geometry"))
   
+  r <- osrmIsochrone(loc = x_sf[10, ], breaks = seq(0,14,2), res = 10, smooth = TRUE)
+  wait()
+  expect_true(inherits(r, "sf"))
+  expect_identical(st_crs(r), st_crs(x_sf))
+  expect_identical(colnames(r), 
+                   c("id", "isomin", "isomax", "geometry"))
+  
   ################# DEMO BIKE #####################
   options(osrm.server = "https://routing.openstreetmap.de/", osrm.profile = "bike")
   r <- osrmIsochrone(loc = c(13.43,52.47), breaks = seq(0,14,2), res = 10 )

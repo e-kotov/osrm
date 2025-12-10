@@ -2,6 +2,7 @@ if(demo_server){
   ######################## DEMO car ###########################
   options(osrm.server = "https://routing.openstreetmap.de/", 
           osrm.profile = "car")
+  
   r <- osrmIsodistance(loc = c(13.43,52.47), breaks = seq(0,500,100), res = 10 )
   wait()
   expect_true(inherits(r, "sf"))
@@ -15,7 +16,13 @@ if(demo_server){
   expect_identical(st_crs(r), st_crs(x_sf))
   expect_identical(colnames(r), 
                    c("id", "isomin", "isomax", "geometry"))
-
+  
+  r <- osrmIsodistance(loc = x_sf[11, ], breaks = seq(0,500,100), res = 10, smooth = F)
+  wait()
+  expect_true(inherits(r, "sf"))
+  expect_identical(st_crs(r), st_crs(x_sf))
+  expect_identical(colnames(r), 
+                   c("id", "isomin", "isomax", "geometry"))
   
   ################# DEMO BIKE #####################
   options(osrm.server = "https://routing.openstreetmap.de/", osrm.profile = "bike")
