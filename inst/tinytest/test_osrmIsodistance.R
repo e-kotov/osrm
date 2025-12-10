@@ -17,7 +17,7 @@ if(demo_server){
   expect_identical(colnames(r), 
                    c("id", "isomin", "isomax", "geometry"))
   
-  r <- osrmIsodistance(loc = x_sf[11, ], breaks = seq(0,500,100), res = 10, smooth = F)
+  r <- osrmIsodistance(loc = x_sf[11, ], breaks = seq(0,500,100), res = 10, smooth = TRUE)
   wait()
   expect_true(inherits(r, "sf"))
   expect_identical(st_crs(r), st_crs(x_sf))
