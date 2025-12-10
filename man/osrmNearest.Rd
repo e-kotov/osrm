@@ -6,6 +6,7 @@
 \usage{
 osrmNearest(
   loc,
+  n = 1,
   exclude,
   osrm.server = getOption("osrm.server"),
   osrm.profile = getOption("osrm.profile")
@@ -21,6 +22,8 @@ osrmNearest(
 }
 If \code{loc} is a data.frame, a matrix, an sfc object or an sf object then
 only the first row or element is considered.}
+
+\item{n}{number of nearest points}
 
 \item{exclude}{pass an optional "exclude" request option to the OSRM API.}
 
