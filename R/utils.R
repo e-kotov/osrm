@@ -385,6 +385,23 @@ fill_grid <- function(destinations, measure, sgrid, res, tmax) {
   sgrid
 }
 
+get_resolution <- function(res, n){
+  ref <- data.frame(
+    res = c(13, 18, 27, 37, 52, 81, 114, 161, 254),
+    n = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
+  )
+  
+  if(!missing(res)){
+    message("'res' is deprecated, use 'n' instead.")
+    return(res)
+  }
+  if(!n %in% ref$n){
+    warning("n is not set to an accepted value, n = 500 will be used.", 
+            call. = FALSE)
+    return(27)
+  }
+  return(ref[ref$n == n, 'res'])
+}
 
 
 
