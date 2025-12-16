@@ -21,15 +21,21 @@ developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.re
 OSRM is a routing service based on OpenStreetMap data. See
 <http://project-osrm.org/> for more information. This package enables
 the computation of routes, trips, isochrones and travel distances
-matrices (travel time and kilometric distance).
+matrices (travel time and kilometric distance) with R.
 
 This package relies on the usage of a running OSRM service (tested with
 v6.0.0 of OSRM).
 
 You can run your own instance of OSRM following guidelines provided
-[here](https://github.com/Project-OSRM/osrm-backend). The simplest
-solution is probably the one based on [docker
-containers](https://github.com/Project-OSRM/osrm-backend#using-docker).
+[here](https://github.com/Project-OSRM/osrm-backend). A simple solution
+is to use [docker
+containers](https://github.com/Project-OSRM/osrm-backend#using-docker)
+and you can find and exemple of building a European-wide OSRM Server
+[here](https://rcarto.github.io/posts/build_osrm_server/).  
+Alternatively, you can use
+[`osrm.backend`](https://www.ekotov.pro/osrm.backend/), an R package
+that installs and controls OSRM executables to prepare routing data and
+run/stop a local server.
 
 :warning: **You must be careful using the OSRM demo server and read the
 [*about* page](https://routing.openstreetmap.de/about.html) of the
@@ -225,16 +231,19 @@ points(x = 13.43, y = 52.47, pch = 4, lwd = 2, cex = 1.5)
 
 ## Installation
 
-- Development version on GitHub
-
-``` r
-remotes::install_github("riatelab/osrm")
-```
-
-- Stable version on [CRAN](https://CRAN.R-project.org/package=osrm/)
+You can install the released version of `osrm` from
+[CRAN](https://CRAN.R-project.org/package=osrm) with:
 
 ``` r
 install.packages("osrm")
+```
+
+Alternatively, you can install the development version of `osrm` (the
+dev branch) from [r-universe](https://riatelab.r-universe.dev/osrm)
+with:
+
+``` r
+install.packages("osrm", repos = "https://riatelab.r-universe.dev")
 ```
 
 ## Community Guidelines
