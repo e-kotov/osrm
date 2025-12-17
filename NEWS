@@ -1,4 +1,4 @@
-# osrm version 4.2.0.9000
+# osrm version 5.0.0
 
 ## Major changes
 * remove deprecated arguments ("returnclass")
@@ -6,7 +6,7 @@
 * deprecate "res" is osrmIso*(), use "n" instead.
 
 ## feat 
-* add a "smooth"" parameter to smooth isochrones and isodistances
+* add a "smooth" parameter to smooth isochrones and isodistances
 * add the possibility to query the n nearest points in osrmNearest()
 
 
