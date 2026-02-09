@@ -61,8 +61,11 @@
 #'   \item dst_snapping_distance: distance from the destination to the
 #'   snapped point on the network (in kilometers)
 #'   }
-#' The object also contains a \code{snapping} attribute that stores a data.frame
-#' of all snapped waypoints (including middle points if \code{loc} is used).
+#' The object also contains a \code{snapping} attribute (accessible via
+#' \code{attr(res, "snapping")}) that stores a data.frame of all snapped
+#' waypoints (including middle points if \code{loc} is used).
+#' The \code{snapping} data.frame contains a \code{snapping_distance} column
+#' (in kilometers).
 #'
 #' If src (or loc) is a vector, a data.frame or a matrix, the coordinate
 #' reference system (CRS) of the route is EPSG:4326 (WGS84).\cr
@@ -212,7 +215,10 @@ osrmRoute <- function(src,
     crs = 4326,
     row.names = paste(id1, id2, sep = "_")
   )
-  attr(rosf, "snapping") <- res$waypoints
+  snapping <- res$waypoints
+  snapping$snapping_distance <- snapping$distance / 1000
+  snapping$distance <- NULL
+  attr(rosf, "snapping") <- snapping
   # prj
   if (!is.na(oprj)) {
     rosf <- st_transform(rosf, oprj)

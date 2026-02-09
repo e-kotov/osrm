@@ -63,12 +63,22 @@ FALSE to return only time and distance.}
 }
 \value{
 The output of this function is an sf LINESTRING of the shortest route.\cr
-It contains 4 fields: \itemize{
-  \item starting point identifier
-  \item destination identifier
-  \item travel time in minutes
-  \item travel distance in kilometers.
+It contains 6 fields: \itemize{
+  \item src: starting point identifier
+  \item dst: destination identifier
+  \item duration: travel time in minutes
+  \item distance: travel distance in kilometers
+  \item src_snapping_distance: distance from the starting point to the
+  snapped point on the network (in kilometers)
+  \item dst_snapping_distance: distance from the destination to the
+  snapped point on the network (in kilometers)
   }
+The object also contains a \code{snapping} attribute (accessible via
+\code{attr(res, "snapping")}) that stores a data.frame of all snapped
+waypoints (including middle points if \code{loc} is used).
+The \code{snapping} data.frame contains a \code{snapping_distance} column
+(in kilometers).
+
 If src (or loc) is a vector, a data.frame or a matrix, the coordinate
 reference system (CRS) of the route is EPSG:4326 (WGS84).\cr
 If src (or loc) is an sfc or sf object, the route has the same CRS
@@ -97,6 +107,12 @@ route1 <- osrmRoute(src = apotheke.sf[1, ], dst = apotheke.sf[16, ])
 # Display paths
 plot(st_geometry(route1))
 plot(st_geometry(apotheke.sf[c(1, 16), ]), col = "red", pch = 20, add = TRUE)
+
+# View snapping distance
+route1$src_snapping_distance
+
+# View all snapped waypoints (including via points)
+attr(route1, "snapping")
 
 # Return only duration and distance
 route3 <- osrmRoute(
