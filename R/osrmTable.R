@@ -130,14 +130,21 @@ osrmTable <- function(src,
   if (!missing(exclude)) {
     url <- paste0(url, "exclude=", exclude, "&")
   }
+
+  # Manage "snapped_distance" measure
+  snapped <- "snapped_distance" %in% measure
+  measure_api <- setdiff(measure, "snapped_distance")
+  if (snapped && !("distance" %in% measure_api)) {
+    measure_api <- c(measure_api, "distance")
+  }
+
   # adding measure parameter
   url <- paste0(
     url,
     "annotations=",
-    paste0(measure, collapse = ","),
+    paste0(measure_api, collapse = ","),
     "&generate_hints=false"
   )
-  # print(url)
   e <- try(
     {
       req_handle <- curl::new_handle(verbose = FALSE)
@@ -154,9 +161,6 @@ osrmTable <- function(src,
   test_http_error(r)
 
   res <- RcppSimdJson::fparse(rawToChar(r$content))
-
-  # create dummy dataset for tests
-  # return(list(res = res, src = src_r, dst = dst_r))
 
   # format results
   output <- list()
@@ -180,5 +184,23 @@ osrmTable <- function(src,
   coords <- coord_format(res = res, src = src_r, dst = dst_r)
   output$sources <- coords$sources
   output$destinations <- coords$destinations
+
+  # compute snapped distances
+  if (snapped && !is.null(output$distances)) {
+    src_snap <- output$sources$snapping_distance
+    dst_snap <- output$destinations$snapping_distance
+    snap_sum <- outer(src_snap, dst_snap, "+")
+    output$snapped_distances <- output$distances + snap_sum
+    
+    # fix self-distance
+    ids_match <- outer(rownames(output$snapped_distances), 
+                       colnames(output$snapped_distances), "==")
+    output$snapped_distances[ids_match] <- 0
+    
+    if (!("distance" %in% measure)) {
+      output$distances <- NULL
+    }
+  }
+
   return(output)
 }
