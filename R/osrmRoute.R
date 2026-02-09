@@ -51,12 +51,19 @@
 #' @param osrm.profile the routing profile to use, e.g. "car", "bike" or "foot".
 #' @return
 #' The output of this function is an sf LINESTRING of the shortest route.\cr
-#' It contains 4 fields: \itemize{
-#'   \item starting point identifier
-#'   \item destination identifier
-#'   \item travel time in minutes
-#'   \item travel distance in kilometers.
+#' It contains 6 fields: \itemize{
+#'   \item src: starting point identifier
+#'   \item dst: destination identifier
+#'   \item duration: travel time in minutes
+#'   \item distance: travel distance in kilometers
+#'   \item src_snapping_distance: distance from the starting point to the
+#'   snapped point on the network (in kilometers)
+#'   \item dst_snapping_distance: distance from the destination to the
+#'   snapped point on the network (in kilometers)
 #'   }
+#' The object also contains a \code{snapping} attribute that stores a data.frame
+#' of all snapped waypoints (including middle points if \code{loc} is used).
+#'
 #' If src (or loc) is a vector, a data.frame or a matrix, the coordinate
 #' reference system (CRS) of the route is EPSG:4326 (WGS84).\cr
 #' If src (or loc) is an sfc or sf object, the route has the same CRS
@@ -76,6 +83,12 @@
 #' # Display paths
 #' plot(st_geometry(route1))
 #' plot(st_geometry(apotheke.sf[c(1, 16), ]), col = "red", pch = 20, add = TRUE)
+#'
+#' # View snapping distance
+#' route1$src_snapping_distance
+#'
+#' # View all snapped waypoints (including via points)
+#' attr(route1, "snapping")
 #'
 #' # Return only duration and distance
 #' route3 <- osrmRoute(
@@ -193,10 +206,13 @@ osrmRoute <- function(src,
     src = id1, dst = id2,
     duration = res$routes$duration / 60,
     distance = res$routes$distance / 1000,
+    src_snapping_distance = res$waypoints$distance[1] / 1000,
+    dst_snapping_distance = res$waypoints$distance[nrow(res$waypoints)] / 1000,
     geometry = st_as_sfc(paste0("LINESTRING(", rcoords, ")")),
     crs = 4326,
     row.names = paste(id1, id2, sep = "_")
   )
+  attr(rosf, "snapping") <- res$waypoints
   # prj
   if (!is.na(oprj)) {
     rosf <- st_transform(rosf, oprj)
