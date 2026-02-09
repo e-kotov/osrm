@@ -29,7 +29,7 @@
 #' }
 #' If relevant, row names are used as identifiers.
 #' @param measure a character indicating what measures are calculated. It can
-#' be "duration" (in minutes), "distance" (meters), "snapped_distance"
+#' be "duration" (in minutes), "distance" (meters), "total_distance"
 #' (network distance + snapping distance, in meters) or any combination
 #' of them.
 #' @param exclude pass an optional "exclude" request option to the OSRM API
@@ -42,7 +42,7 @@
 #' \itemize{
 #'   \item{durations}: a matrix of travel times (in minutes)
 #'   \item{distances}: a matrix of network distances (in meters)
-#'   \item{snapped_distances}: a matrix of network + snapping distances (in meters)
+#'   \item{total_distances}: a matrix of network + snapping distances (in meters)
 #'   \item{sources}: a data.frame of the coordinates of the points actually
 #'   used as starting points, including their snapping distance (EPSG:4326 - WGS84)
 #'   \item{destinations}: a data.frame of the coordinates of the points actually
@@ -133,10 +133,10 @@ osrmTable <- function(src,
     url <- paste0(url, "exclude=", exclude, "&")
   }
 
-  # Manage "snapped_distance" measure
-  snapped <- "snapped_distance" %in% measure
-  measure_api <- setdiff(measure, "snapped_distance")
-  if (snapped && !("distance" %in% measure_api)) {
+  # Manage "total_distance" measure
+  total <- "total_distance" %in% measure
+  measure_api <- setdiff(measure, "total_distance")
+  if (total && !("distance" %in% measure_api)) {
     measure_api <- c(measure_api, "distance")
   }
 
@@ -187,17 +187,17 @@ osrmTable <- function(src,
   output$sources <- coords$sources
   output$destinations <- coords$destinations
 
-  # compute snapped distances
-  if (snapped && !is.null(output$distances)) {
+  # compute total distances
+  if (total && !is.null(output$distances)) {
     src_snap <- output$sources$snapping_distance
     dst_snap <- output$destinations$snapping_distance
     snap_sum <- outer(src_snap, dst_snap, "+")
-    output$snapped_distances <- output$distances + snap_sum
+    output$total_distances <- output$distances + snap_sum
     
     # fix self-distance
-    ids_match <- outer(rownames(output$snapped_distances), 
-                       colnames(output$snapped_distances), "==")
-    output$snapped_distances[ids_match] <- 0
+    ids_match <- outer(rownames(output$total_distances), 
+                       colnames(output$total_distances), "==")
+    output$total_distances[ids_match] <- 0
     
     if (!("distance" %in% measure)) {
       output$distances <- NULL
