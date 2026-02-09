@@ -62,9 +62,10 @@
 #'   snapped point on the network (in kilometers)
 #'   }
 #' The object also contains a \code{snapping} attribute (accessible via
-#' \code{attr(res, "snapping")}) that stores a data.frame of all snapped
-#' waypoints (including middle points if \code{loc} is used).
-#' The \code{snapping} data.frame contains a \code{snapping_distance} column
+#' \code{attr(result, "snapping")}, where \code{result} is the object
+#' returned by \code{osrmRoute()}) that stores a data.frame of all snapped
+#' waypoints (including middle points if \code{loc} is used). The
+#' \code{snapping} data.frame contains a \code{snapping_distance} column
 #' (in kilometers).
 #'
 #' If src (or loc) is a vector, a data.frame or a matrix, the coordinate
